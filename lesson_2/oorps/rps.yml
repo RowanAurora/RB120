@@ -11,7 +11,7 @@ en:
   rule5: "Get #{ROUNDS} wins before the computer to stop the apocalypse"
   bye: "Thanks for playing Rock, Paper, Scissors, Lizard, Spock: Rise of the machines. Bye!"
   win: "You saved the world! Now the terminators are coming for you."
-  lose: "You failed to save the world! Fight for you new overlord's amusement."
+  lose: "You failed to save the world! Fight for your new overlord's amusement."
   tie: "It's a tie!"
   move_history: 'Would you like to see the move history?(y/n)'
   again: "Would you like to play again?(y/n)"
