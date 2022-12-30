@@ -1,6 +1,7 @@
 require 'yaml'
 LANGUAGE = 'en'
 MESSAGES = YAML.load_file('rps.yml')
+ROUNDS_TO_WIN = 3
 
 module Formatable
   def to_s
@@ -10,10 +11,9 @@ end
 
 module Displayable
   VALID = ['y', 'yes', 'n', 'no']
-  ROUNDS = 3
   ANIMATE_TEXT = ["ROCK", "PAPER", "SCISSORS", "LIZARD", "SPOCK", "GO!"]
-  LOSE_GRAPHIC = [%( .  _.-^^---....,,--_n ), %( _--                  L--_),
-                  %(<                        >), %(|                         |),
+  LOSE_GRAPHIC = [%( .  _.-^^---....,,--_^ ), %( _--                  L--_),
+                  %(<                        \>), %(|                         |),
                   %( L._                   _./), %(    ```--. . , ; .--''' ),
                   %(          | |   |        ), %(       .-=||  | |=-.   ),
                   %(       `-=#$%&%$#=-'   ), %(          | ;  :|     ),
@@ -52,7 +52,7 @@ module Displayable
     puts
     prompt "rule3"
     prompt "rule4"
-    puts "Get #{ROUNDS} wins before the computer to stop the apocalypse"
+    puts "Get #{ROUNDS_TO_WIN} wins before the computer to stop the apocalypse"
     puts
   end
 
@@ -79,10 +79,7 @@ module Displayable
     puts "#{computer.name} chose #{computer.move}"
   end
 
-  def bomb
-    LOSE_GRAPHIC.each { |line| puts line }
-  end
-
+  
   def display_winner
     if human_won?
       puts "#{human.name} won this battle!"
@@ -92,23 +89,23 @@ module Displayable
       prompt "tie"
     end
   end
-
+  
   def hero_display
-    if human.score == ROUNDS
+    if grand_winner(human)
       prompt "win"
-    elsif computer.score == ROUNDS
+    elsif grand_winner(computer)
       bomb()
       prompt "lose"
-      human.name = messages "hero"
-      computer.name = messages "lord"
+      forced_name_changer
     end
   end
-
+  
+  
   def score_display
     puts "#{human.name} score : #{human.score}"
     puts "#{computer.name} score : #{computer.score}"
   end
-
+  
   def move_history_display
     prompt "move_history"
     answer = nil
@@ -120,6 +117,20 @@ module Displayable
     end
     puts @move_history if answer.start_with?('y')
   end
+  private
+  
+  def grand_winner(player)
+    player.score == ROUNDS_TO_WIN
+  end
+  
+  def forced_name_changer
+    human.name = messages "hero"
+    computer.name = messages "lord"
+  end
+
+  def bomb
+    LOSE_GRAPHIC.each { |line| puts line }
+  end
 end
 
 module Moves
@@ -127,29 +138,34 @@ module Moves
     include Formatable
     VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
     DANGER = ['scissors', 'lizard', 'rock']
-
+    
     def >(other_move)
       self.class::WINS.include?(other_move.to_s.downcase)
     end
   end
 
   class Rock < Move
+    private
     WINS = ['scissors', 'lizard']
   end
 
   class Paper < Move
+    private
     WINS = ['rock', 'spock']
   end
 
   class Scissors < Move
+    private
     WINS = ['paper', 'lizard']
   end
 
   class Lizard < Move
+    private
     WINS = ['spock', 'paper']
   end
 
   class Spock < Move
+    private
     WINS = ['scissors', 'rock']
   end
 end
@@ -206,8 +222,10 @@ module Players
 
   class Computer < Player
     NAMES = ["Edi", "Hades", "Watson", 'Printer']
+    FETCH = MOVE_INPUT[Moves::Move::VALUES.sample]
     include Formatable
 
+    private
     def set_name
       self.name = to_s
     end
@@ -221,13 +239,13 @@ module Players
 
   class Edi < Computer
     def choose
-      self.move = MOVE_INPUT[Moves::Move::VALUES.sample]
+      self.move = FETCH
     end
   end
 
   class Hades < Computer
     def choose
-      self.move = MOVE_INPUT[Moves::Move::DANGER.sample]
+      self.move = FETCH
     end
   end
 
@@ -255,10 +273,9 @@ end
 
 class RPSGame
   attr_accessor :human, :computer
-
   include Displayable
   include Movestorable
-
+  
   def initialize
     display_welcome_message
     display_rules
@@ -266,19 +283,29 @@ class RPSGame
     @computer = enemy
     @move_history = []
   end
-
-  def pick_enemy
-    n = nil
+  
+  def play
     loop do
-      puts
-      prompt "enemy"
-      n = gets.chomp.capitalize
-      break if Players::Computer::NAMES.include?(n)
-      prompt "valid_enemy"
+      move_section
+      display_section
+      break unless play_again?
     end
-    n
+    move_history_display
+    display_goodbye_message
   end
-
+  
+  
+  def human_won?
+    human.move > computer.move
+  end
+  
+  def computer_won?
+    computer.move > human.move
+  end
+  
+  
+  
+  private
   def enemy
     n = pick_enemy
     case n
@@ -288,15 +315,6 @@ class RPSGame
     when 'Printer' then Players::Printer.new
     end
   end
-
-  def human_won?
-    human.move > computer.move
-  end
-
-  def computer_won?
-    computer.move > human.move
-  end
-
   def score_update
     if human_won?
       human.score += 1
@@ -304,7 +322,7 @@ class RPSGame
       computer.score += 1
     end
   end
-
+  
   def play_again?
     answer = nil
     loop do
@@ -314,12 +332,6 @@ class RPSGame
       prompt "yesno"
     end
     answer.start_with?('y')
-  end
-
-  def move_section
-    human.choose
-    computer.choose
-    movekeep
   end
 
   def display_section
@@ -333,15 +345,23 @@ class RPSGame
     score_display
     puts
   end
-
-  def play
+  
+  def move_section
+    human.choose
+    computer.choose
+    movekeep
+  end
+  
+  def pick_enemy
+    n = nil
     loop do
-      move_section
-      display_section
-      break unless play_again?
+      puts
+      prompt "enemy"
+      n = gets.chomp.capitalize
+      break if Players::Computer::NAMES.include?(n)
+      prompt "valid_enemy"
     end
-    move_history_display
-    display_goodbye_message
+    n
   end
 end
 
