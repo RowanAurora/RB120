@@ -1,7 +1,7 @@
 require 'yaml'
 LANGUAGE = 'en'
 MESSAGES = YAML.load_file('rps.yml')
-ROUNDS_TO_WIN = 3
+ROUNDS_TO_WIN = 1
 
 module Formatable
   def to_s
@@ -129,7 +129,8 @@ module Displayable
   end
 
   def bomb
-    LOSE_GRAPHIC.each { |line| puts line }
+    #LOSE_GRAPHIC.each { |line| puts line }
+    prompt "lose_art"
   end
 end
 
