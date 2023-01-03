@@ -2,7 +2,7 @@ en:
   welcome: '----------------ROCK  PAPER  SCISSORS  LIZARD  SPOCK------------------'
   title_one: "█▀█ █ █▀ █▀▀   █▀█ █▀▀   ▀█▀ █░█ █▀▀   █▀▄▀█ ▄▀█ █▀▀ █░█ █ █▄░█ █▀▀ █▀"
   title_two: "█▀▄ █ ▄█ ██▄   █▄█ █▀░   ░█░ █▀█ ██▄   █░▀░█ █▀█ █▄▄ █▀█ █ █░▀█ ██▄ ▄█"
-  rules: "Would You like to see the rules?(y/n)" 
+  rules: "Would You like to see the rules?(y/n)"
   yesno: "Please input yes or no"
   rule1: "Scissors cuts Paper covers Rock crushes Lizard poisons Spock smashes Scissors "
   rule2: "decapitates Lizard eats Paper disproves Spock vaporizes Rock crushes Scissors"
@@ -13,7 +13,7 @@ en:
   win: "You saved the world! Now the terminators are coming for you."
   lose: "You failed to save the world! Fight for your new overlord's amusement."
   tie: "It's a tie!"
-  move_history: 'Would you like to see the move history?(y/n)'
+  move_history: "Would you like to see the move history?(y/n)"
   again: "Would you like to play again?(y/n)"
   name: "What's your name?"
   sorry_name: "Sorry, must enter a name"
@@ -24,14 +24,14 @@ en:
   hero: Wastelander
   lord: "SUPREME OVERLORD"
   lose_art: |2
-  '     _.-^^---....,,--
-   _--                  --_  
-  <                        >)
-  \|                         |
-   \._                   _./
-     ```--. . , ; .--'''
-           \| |   |
-         .-=||  | |=-.
-         `-=#$%&%$#=-'
-            \| ;  :|
-   _____.,-#%&$@%#&#~,._____'
+    .  _.-^^---....,,--_n 
+    _--                  L--_
+    <                        >
+    |                         |
+    L._                   _./
+        ```--. . , ; .--''' 
+              | |   |        
+          .-=||  | |=-.                     
+          `-=#$%&%$#=-'    
+              | ;  :|                     
+    _____.,-#%&$@%#&#~,._____

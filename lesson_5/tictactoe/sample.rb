@@ -1,23 +1,14 @@
-# def draw 
-#   puts "     |     |"
-#   puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
-#   puts "     |     |"
-#   puts "-----+-----+-----"
-#   puts "     |     |"
-#   puts "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}"
-#   puts "     |     |"
-#   puts "-----+-----+-----"
-#   puts "     |     |"
-#   puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
-#   puts "     |     |"
-# end
+def text_animation
+  animate = " ✨                                      ✨"
+  10.times do
+    sleep 0.2
+    print "\r"
+    print(animate)
+    sleep 0.2
+    print "\r"
+    print(animate.reverse)
+  end
+  sleep 0.5
+end
 
-@squares = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']
-
-board_arr = ["     |     |",
-"  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}", "     |     |",
-"-----+-----+-----", "     |     |", "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}",
-"     |     |", "-----+-----+-----", "     |     |", "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}",
-"     |     |" ]
-
-board_arr.each { |line| puts line }
+text_animation
