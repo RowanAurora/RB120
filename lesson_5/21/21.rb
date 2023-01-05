@@ -1,14 +1,19 @@
-require 'pry'
 require 'yaml'
 
 DISPLAY_TEXT = YAML.load_file('21.yml')
 DECK_CHOICES = ["🐖", "👹", "🤖", "👻", "💀", "🎃", "🧠", "🧟"]
 
 module Displayable
-
   def prompt(key)
     display_item = DISPLAY_TEXT[key]
     puts display_item
+  end
+
+  def player_turn_card_display
+    puts
+    puts "#{dealer.name}'s hand:"
+    dealer.card_down_hand
+    player.display_cards
   end
 
   def welcome_display
@@ -18,14 +23,14 @@ module Displayable
     prompt "welcome"
     puts
   end
+
   def rules_set
     prompt 'rules'
   end
 
-  def display_goodbye_message
-    prompt "bye"
+  def text_animation
     animate = "#{' ' * 60} 🐖🧟 "
-    until animate.size == 0
+    until animate.size == 1
       sleep 0.02
       print "\r"
       print(animate)
@@ -33,6 +38,11 @@ module Displayable
       animate.shift
       animate = animate.join
     end
+  end
+
+  def display_goodbye_message
+    prompt "bye"
+    text_animation
     puts
   end
 
@@ -41,158 +51,196 @@ module Displayable
   end
 
   def display_rules
-    puts "Do you want to see the rules?"
+    puts
+    prompt 'see_rules'
     answer = nil
     loop do
       answer = gets.chomp.downcase
       break if ['y', 'n', 'yes', 'no'].include?(answer)
-      puts "Invalid input"
+      prompt 'invalid'
     end
-    prompt "rules" if answer.start_with?('y') 
+    prompt "rules" if answer.start_with?('y')
   end
 
+  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   def generate_card_display
-    hsh = {:line1 => [], :line2 => [], :line3 => [], :line4 => [],:line5 => [], :line6 => [], :line7 => []}
+    hsh = { line1: [], line2: [], line3: [], line4: [], line5: [],
+            line6: [], line7: [] }
     counter = 0
     print "\r"
-    self.hand.size.times do 
-    hsh[:line1] << " ________ " 
-    hsh[:line2] << "|#{self.hand[counter].suit}     #{Deck.style}|"
-    hsh[:line3] << "|        |"
-    hsh[:line4] << "|#{self.hand[counter]} |"
-    hsh[:line5] << "|        |"
-    hsh[:line6] << "|#{Deck.style}     #{self.hand[counter].suit}|"
-    hsh[:line7] << " -------- "
-    counter += 1
+    hand.size.times do
+      hsh[:line1] << " ________ "
+      hsh[:line2] << "|#{hand[counter].suit}     #{Deck.style}|"
+      hsh[:line3] << "|        |"
+      hsh[:line4] << "|#{hand[counter]} |"
+      hsh[:line5] << "|        |"
+      hsh[:line6] << "|#{Deck.style}     #{hand[counter].suit}|"
+      hsh[:line7] << " -------- "
+      counter += 1
     end
     hsh.values
   end
+  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
-  def display_cards 
-    puts "#{self.name}'s hand:"
-    generate_card_display.each do |line|
-      puts line.join(" ")
-    end
+  def display_cards
+    puts "#{name}'s hand:"
+    generate_card_display.each { |line| puts line.join(" ") }
+    puts
 
-    if calculate_total > 21 
-      puts "#{self.name} Busted!"
+    if calculate_total > 21
+      puts "#{name} Busted!"
     else
-      puts "#{self.name} is at: #{calculate_total}"
+      puts "#{name} is at: #{calculate_total}"
     end
     puts
+    sleep 0.1
   end
 
-  def dealers_hand
+  def card_down_hand
+    card = hand[1]
+    icon = Deck.style
+    puts " ________   ________"
+    puts "|#{card.suit}     #{icon}| |#{icon}    #{icon}|"
+    puts "|        | |        |"
+    puts "|#{card} | |  CARD  |"
+    puts "|        | |        |"
+    puts "|#{icon}     #{card.suit}| |#{icon}    #{icon}|"
+    puts " --------   --------"
     puts
-    self.update_total
-    puts "#{self.name}'s hand:"
-    card = self.hand[1]
-
-      puts " ________   ________"
-      puts "|#{card.suit}     #{Deck.style}| |#{Deck.style}    #{Deck.style}|"
-      puts "|        | |        |"
-      puts "|#{card} | |  CARD  |"
-      puts "|        | |        |"
-      puts "|#{Deck.style}     #{card.suit}| |#{Deck.style}    #{Deck.style}|"
-      puts " --------   --------"
-      puts
   end
 
+  # rubocop:disable Metrics/MethodLength
   def calculate_total
     total = 0
-    self.hand.each do |card|
-      if card.ace?
-        total += 11
-      elsif card.royal?
-        total +=10
-      else
-        total += card.face.to_i
-      end
+    hand.each do |card|
+      total += if card.ace?
+                 11
+               elsif card.royal?
+                 10
+               else
+                 card.face.to_i
+               end
     end
 
-    self.hand.select(&:ace?).count.times do
+    hand.select(&:ace?).count.times do
       break if total <= 21
       total -= 10
     end
 
-    update_total = total
     total
   end
+  # rubocop:enable Metrics/MethodLength
 
-  def thinking
+  def dealing_animation
+    animate = "🧠👀 #{dealer.name} is dealing."
     3.times do
       print "\r"
-      print "🧠👀 #{dealer.name} is thinking."
-      sleep 0.2
-      print "\r"
-      print "🧠👀 #{dealer.name} is thinking.."
-      sleep 0.2
-      print "\r"
-      print "🧠👀 #{dealer.name} is thinking..."
+      print animate
+      animate << '.'
       sleep 0.2
     end
   end
+
+  def dealing
+    puts
+    3.times do
+      dealing_animation
+    end
+    clear
+  end
+
+  def show_score
+    puts "#{player.name} total: #{player.calculate_total}"
+    puts "#{dealer.name} total: #{dealer.calculate_total}"
+  end
+
+  def cards_and_results
+    show_cards
+    show_result
+  end
+
+  def show_cards
+    dealer.display_cards
+    player.display_cards
+  end
+
+  def beat_or_bust(win, lose)
+    if lose.busted?
+      puts "#{win.name} wins! #{lose.name} busted!"
+    else
+      puts "#{win.name} takes this hand!"
+    end
+  end
+
+  def dealer_win_check
+    (player.busted? && !dealer.busted?) ||
+      (player.calculate_total < dealer.calculate_total)
+  end
+
+  def player_win_check
+    (dealer.busted? && !player.busted?) ||
+      (player.calculate_total > dealer.calculate_total)
+  end
+
+  def show_result
+    if dealer_win_check
+      beat_or_bust(dealer, player)
+    elsif player_win_check
+      beat_or_bust(player, dealer)
+    else
+      prompt 'tied'
+    end
+    puts
+    show_score
+  end
 end
-  
-  class Participant
+
+class Participant
   include Displayable
-  attr_accessor :hand, :name, :total
+  attr_accessor :hand, :name
 
   def initialize
     @hand = []
     set_name
-    total = 0
   end
 
   def add_card(new_card)
     @hand << new_card
   end
 
-  def update_total
-    @total = self.calculate_total
-  end
-
-  def total
-    update_total
-    @total
-  end
-
   def busted?
-    self.calculate_total > 21
+    calculate_total > 21
   end
-
 end
 
 class Player < Participant
-
   def set_name
     name = ''
     puts "What's your name?"
-    loop do 
+    loop do
       name = gets.chomp.capitalize
       break if name.to_s.strip == name
-      puts "Invalid input"
+      prompt 'invalid'
     end
     self.name = name
   end
 end
 
 class Dealer < Participant
-
   def initialize
     @hand = []
     @name = "Dealer"
-    total = 0
   end
 end
 
 class Deck
-  CARDS = [' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K', ' A']
-  SUITS = %w( ♥ ♠ ♦ ♣)
+  CARDS = [' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q',
+           ' K', ' A']
+  SUITS = %w(♥ ♠ ♦ ♣)
   include Displayable
   attr_accessor :cards
 
-  def initialize
+  def initialize(style='🐖')
     @cards = []
     SUITS.each do |suit|
       CARDS.each do |face|
@@ -201,11 +249,12 @@ class Deck
     end
 
     scramble!
-    @@style = 🐖
+    @@style = style
   end
 
   def choose_deck_style
     answer = nil
+    puts
     prompt "choose_deck"
     prompt 'deck_choices'
     loop do
@@ -220,10 +269,10 @@ class Deck
     @@style
   end
 
-  def self.choose_style 
+  def choose_style
     @@style = choose_deck_style
   end
-  
+
   def scramble!
     cards.shuffle!
   end
@@ -231,11 +280,9 @@ class Deck
   def deal
     cards.pop
   end
-
 end
 
 class Card
-
   attr_accessor :suit, :face
 
   def initialize(suit, face)
@@ -244,22 +291,12 @@ class Card
   end
 
   def ace?
-    self.face == " A"
+    face == " A"
   end
 
   def royal?
-    %w(K Q J).include?(self.face.strip)
+    %w(K Q J).include?(face.strip)
   end
-
-  # def value
-  #   if self.royal?
-  #     10
-  #   elsif ace?
-  #     self.ace_value
-  #   else
-  #     card.face.to_i
-  #   end
-  # end
 
   def to_s
     "#{face} of #{suit}"
@@ -278,49 +315,51 @@ class GameEngine
     @dealer = Dealer.new
   end
 
-  def start
-    display_rules 
-    loop do 
-      deal_cards
-      clear
-      player_turn
-      clear
-      if player.busted?
-        show_cards
-        show_result
-        if play_again?
-          reset
-          next
-        else
-          break
-        end
-      end
+  def opening
+    display_rules
+    deck.choose_style
+  end
 
+  def player_section
+    deal_cards
+    clear
+    player_turn
+  end
+
+  # rubocop:disable Metrics/MethodLength
+  def start
+    opening
+    loop do
+      player_section
+      if player.busted?
+        cards_and_results
+        break unless play_again?
+        reset
+        next
+      end
       dealer_turn
       if dealer.busted?
-        if play_again?
-          reset
-          next
-        else
-          break
-        end
+        break unless play_again?
+        reset
+        next
       end
-
-      show_cards
-      show_result
-      play_again? ? reset : break
+      cards_and_results
+      break unless play_again?
+      text_animation
+      reset
       # score
     end
-    display_goodbye_message
   end
+  # rubocop:enable Metrics/MethodLength
 
   def play_again?
     answer = nil
+    puts
     puts "Do you want to play another hand?"
-    loop do 
+    loop do
       answer = gets.chomp.downcase
-      break if ['yes', 'y', 'n' , 'no'].include?(answer)
-      puts "Invalid input"
+      break if ['yes', 'y', 'n', 'no'].include?(answer)
+      prompt 'invalid'
     end
     puts
     answer.start_with?('y')
@@ -328,94 +367,77 @@ class GameEngine
 
   def deal_cards
     2.times do
-    player.add_card(deck.deal)
-    dealer.add_card(deck.deal)
+      player.add_card(deck.deal)
+      dealer.add_card(deck.deal)
     end
   end
 
   def reset
-    player.total = 0
     player.hand = []
-    dealer.total = 0
     dealer.hand = []
     @deck = Deck.new
   end
 
+  def dealer_busted
+    puts "#{dealer.name} choose to stay."
+    sleep 0.5
+    clear
+  end
+
+  def dealer_hit
+    dealer.add_card(deck.deal)
+    clear
+    dealer.display_cards
+    player.display_cards
+    sleep 1
+  end
+
+  def player_hit
+    sleep 0.2
+    player.add_card(deck.deal)
+    clear
+  end
+
+  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   def player_turn
     loop do
-      dealer.dealers_hand
-      player.display_cards
+      player_turn_card_display
       answer = nil
       puts "Hit or Stay?(h/s)"
       loop do
         answer = gets.chomp.downcase
         break if ['h', 's', 'hit', 'stay'].include?(answer)
-        puts "You gotta say hit or stay!!!"
+        prompt 'hit or stay'
       end
       if answer.start_with?('s')
+        puts
         puts "#{player.name} stays"
         break
       elsif player.busted?
         clear
         break
       else
-        sleep 0.2
-        player.add_card(deck.deal)
+        player_hit
         break if player.busted?
-        clear
       end
     end
   end
 
-
   def dealer_turn
-    thinking()
-    sleep 1
+    dealing()
     loop do
-      if dealer.total > 16 && !dealer.busted?
-        puts "#{dealer.name} choose to stay."
-        sleep 1
-        clear
+      if dealer.calculate_total > 16 && !dealer.busted?
+        dealer_busted
         break
       elsif dealer.busted?
         break
       else
-        dealer.add_card(deck.deal)
-        clear
-        dealer.display_cards
-        player.display_cards
-        sleep 1
+        dealer_hit
       end
     end
   end
-
-  def show_score
-    puts "#{player.name} total: #{player.total}"
-    puts "#{dealer.name} total: #{dealer.total}"
-  end
-
-  def show_cards
-    dealer.display_cards
-    player.display_cards
-  end
-
-  def show_result
-    if player.busted? && !dealer.busted?
-      puts "Dealer wins! #{player.name} busted!"
-    elsif dealer.busted? && !player.busted?
-      puts "You win! Dealer busted!"
-    elsif player.total > dealer.total
-      puts "#{player.name} takes this hand"
-    elsif player.total < dealer.total
-      puts "#{dealer.name} takes this hand!"  
-    else
-      puts "All tied up!"
-    end
-    puts
-    show_score
-  end
+  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 end
 
-
-
 GameEngine.new.start
+display_goodbye_message

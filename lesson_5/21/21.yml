@@ -28,3 +28,7 @@ rules: |2
   Ace can be either 1 if your total would put you over 21 or 11 if not.
   Hit(h) to receive another card, Stay(s) to refuse.
   Over 21 is a bust
+invalid: "Sorry! You're input is invalid!"
+see_rules: "Do you want to see the rules?"
+tied: "You tied!"
+hit_or_stay: "You have to hit or stay!!!"
