@@ -61,21 +61,27 @@ module Displayable
     puts fetch_text
   end
 
-  # rubocop:disable Metrics\MethodLength
+  def human_won
+    puts "#{' ' * (31 - human.name.size)}#{human.name} won!"
+    score_update(human)
+  end
+
+  def computer_won
+    puts "#{' ' * (29 - computer.name.size)}The #{computer.name} Won!"
+    score_update(computer)
+  end
+
   def display_result
     clear_screen_display_board
     case board.winning_marker
     when Player.human_marker
-      puts "#{' ' * (31 - human.name.size)}#{human.name} won!"
-      score_update(human)
+      human_won
     when Player.computer_marker
-      puts "#{' ' * (29 - computer.name.size)}The #{computer.name} Won!"
-      score_update(computer)
+      computer_won
     else
       prompt "full_board"
     end
   end
-  # rubocop:enable Metrics\MethodLength
 
   def display_score
     puts
@@ -304,7 +310,7 @@ class Player
       prompt "choose_name"
       answer = gets.chomp.capitalize
       puts
-      break if answer.to_s.strip == answer
+      break if answer.to_s.strip == answer && !answer.empty?
       prompt "invalid"
     end
     @name = answer
@@ -385,10 +391,7 @@ class TTTGame
     intro
     loop do
       sleep 0.2
-      clear_screen_display_board
-      move_section(switch)
-      display_result
-      display_score
+      play_display_section
       break unless play_again?
       reset
     end
@@ -397,6 +400,13 @@ class TTTGame
   end
 
   private
+
+  def play_display_section
+    clear_screen_display_board
+    move_section(switch)
+    display_result
+    display_score
+  end
 
   def intro
     clear
