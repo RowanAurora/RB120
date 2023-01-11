@@ -12,7 +12,7 @@ module Displayable
 
   def player_turn_card_display
     puts
-    puts "#{dealer.name}'s hand:".center(DISPLAY_WIDTH)
+    puts "#{dealer.name}'s hand:"
     dealer.card_down_hand
     player.display_cards
   end
