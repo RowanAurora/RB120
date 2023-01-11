@@ -2,11 +2,12 @@ require 'yaml'
 
 DISPLAY_TEXT = YAML.load_file('21.yml')
 DECK_CHOICES = ["🐖", "👹", "🤖", "👻", "💀", "🎃", "🧠", "🧟"]
+DISPLAY_WIDTH = 80
 
 module Displayable
   def prompt(key)
     display_item = DISPLAY_TEXT[key]
-    puts display_item
+    puts display_item.center(DISPLAY_WIDTH)
   end
 
   def player_turn_card_display
@@ -31,7 +32,6 @@ module Displayable
   def display_goodbye_message
     prompt "bye"
     text_animation
-    puts
   end
 
   def display_rules
@@ -130,6 +130,7 @@ module Animateable
       animate = animate.join
     end
   end
+  puts
 end
 
 module Functionable
@@ -238,7 +239,7 @@ class Deck
   include Functionable
   attr_accessor :cards
 
-  def initialize(style='🐖')
+  def initialize(style)
     @cards = []
     SUITS.each do |suit|
       CARDS.each do |face|
@@ -312,43 +313,48 @@ class GameEngine
 
   def initialize
     welcome_display
-    @deck = Deck.new
+    @deck = Deck.new('bob')
     @player = Player.new
     @dealer = Dealer.new
   end
 
-  # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength
   def play_game
     opening
     loop do
+      clear
       player_section
       if player.busted?
         cards_and_results
         break unless play_again?
-        reset
+        ending
         next
       end
-      dealer_turn
-      if dealer.busted?
+      if dealer_turn?
         break unless play_again?
-        reset
+        ending
         next
       end
+
       cards_and_results
       break unless play_again?
-      text_animation
-      sleep 0.2
-      reset
+      ending
     end
     display_goodbye_message
   end
-  # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength
 
   private
 
   def opening
     display_rules
     deck.choose_style
+  end
+
+  def ending
+    text_animation
+    sleep 0.2
+    reset
   end
 
   def player_section
@@ -366,7 +372,7 @@ class GameEngine
       break if ['yes', 'y', 'n', 'no'].include?(answer)
       prompt 'invalid'
     end
-    puts
+    reset if answer.start_with?('y')
     answer.start_with?('y')
   end
 
@@ -380,10 +386,10 @@ class GameEngine
   def reset
     player.hand = []
     dealer.hand = []
-    @deck = Deck.new
+    @deck = Deck.new(Deck.style)
   end
 
-  def dealer_busted
+  def dealer_stays
     puts "#{dealer.name} choose to stay."
     sleep 0.5
     clear
@@ -403,45 +409,45 @@ class GameEngine
     clear
   end
 
-  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+  def hit_stay_loop
+    answer = nil
+    puts "Hit or Stay?(h/s)"
+    loop do
+      answer = gets.chomp.downcase
+      break if ['h', 's', 'hit', 'stay'].include?(answer)
+      prompt 'hit_or_stay'
+    end
+    answer
+  end
+
+  # rubocop:disable Metrics/MethodLength
   def player_turn
     loop do
+      break if player.busted?
       player_turn_card_display
-      answer = nil
-      puts "Hit or Stay?(h/s)"
-      loop do
-        answer = gets.chomp.downcase
-        break if ['h', 's', 'hit', 'stay'].include?(answer)
-        prompt 'hit_or_stay'
-      end
-      if answer.start_with?('s')
+      if hit_stay_loop.start_with?('s')
         puts
         puts "#{player.name} stays"
         break
-      elsif player.busted?
-        clear
-        break
       else
         player_hit
-        break if player.busted?
       end
     end
   end
+  # rubocop:enable Metrics/MethodLength
 
-  def dealer_turn
+  def dealer_turn?
     dealing()
     loop do
-      if dealer.calculate_total > 16 && !dealer.busted?
-        dealer_busted
-        break
-      elsif dealer.busted?
-        break
-      else
-        dealer_hit
-      end
+     if dealer.calculate_total > 16 && !dealer.busted?
+      dealer_stays
+      break
+     end
+      break if dealer.busted?
+      dealer_hit
     end
+      dealer.busted?
   end
-  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
   def cards_and_results
     show_cards
