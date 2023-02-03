@@ -16,9 +16,41 @@ var = CustomClass.new(# any required arguments)
 
 We can use a nice bit of ruby to create getter and/or setter methods. 
 We can use `attr_reader` to automatically create a getter method for each instance variable we put as an argument, passed as a symbol.
+
+attr_reader creates a getter that is equivilent to the `name` method in the example below:
+
 ```ruby
 class CustomClass
-  attr_reader :var, :other_var
+
+  def initialize(name)
+    @name = name
+  end
+
+  def name #this method is equivilent to the getter creater when we use attr reader
+    @name
+  end
+end
+```
+
+attr_writer is equivilent to the `name=` method in the example below
+
+```ruby
+class CustomClass
+
+  def initialize(name)
+    @name = name
+  end
+
+  def name=(name) #this method is equivilent to the getter creater when we use attr_writer
+    @name = name
+  end
+end
+
+```
+
+```ruby
+class Person
+  attr_reader :name, :age
   #class contents
 end
 ```
@@ -31,16 +63,19 @@ Getter and setter method callings both have particular bits of syntax. For gette
 ```ruby
 object.getter_method
 ```
-Inside of a class, we can to be sure we are calling a getter method and not initializing a new local variable. The wrong way below :
+Inside of a class, we can to be sure we are calling a getter method and not initializing a new local variable. Below are two example of setter methods, the first one accidentally initializing a local variable, and the second using self to call the getter method.
+
+The wrong way below :
 ```ruby 
-def instance_method=(other_thing)
-  var = other_thing
+def name=(other_name)
+  name = other_name
 end
 ```
 and the correct way:
+
 ```ruby 
-def instance_method=(other_thing)
-  self.var = other_thing
+def name=(other_name)
+  self.name = other_name
 end
 ```
 
@@ -155,18 +190,18 @@ Inside of a class instance variabels can be referenced or set using getters and 
   Classes can only directly inherit from a single class at a time but that includes the parents of the parent class.
 
   ```ruby
-  class CustomClass
+  class Pet
     # class stuff
-    def method_to_be_inherited
+    def speak
       puts "yes"
     end
   end
 
-  class SubClass < CustomClass
+  class Cat < Pet
   end
 
-  var = Subclass.new
-  car.method_to_be_inhertited # => yes
+  kitty = Cat.new
+  kitty.speak # => yes
 ```
 
 ### Encapsulation
@@ -240,6 +275,9 @@ Namespacing is a way of grouping related classes, to contain them in one place, 
 
 ## Method lookup path
   The method lookup path is the trail that ruby follows to find a method when called. It starts in the class of the object that a method is called with, and goes up the inheritence hierachy of classes and modules. Calling ancestors on a class will detail the path.
+
+  Ruby looks in the current class, then the included modules from the last included to the first, and then up the inheritence chain, repeating the process.
+
   ```ruby 
   class CustomClass
     # class stuff
@@ -260,6 +298,7 @@ Self in custom classes has a few meanings, namely, the calling object or the cla
 
 Inside instance methods, self referes to the calling object.
 Outside of instance method definitions but inside the class definition, self refers to the class itself.
+This is true outside of any method, aswell as inside of class methods.
 
 Self - As the calling object
 
@@ -282,6 +321,7 @@ and self as the class
 class CustomClass
 
   def self.insta_method
+    puts self
     puts "BINGBONG"
   end
 
@@ -290,6 +330,7 @@ end
 
 CustomClass.insta_method
 
+# => CustomClass
 # => BINGBONG
 # => CustomClass
 ```
@@ -298,17 +339,24 @@ CustomClass.insta_method
 ## Calling methods with self
 We call methods with self to differentiate from creating a local variable. Ruby style reccomends avoiding self where not required
 
-```ruby
-class CustomClass
-  def insta_method
-    puts self.capitalize
-  end
-  protected
+Below, we call the getter method name using self
 
-  def other_method(other)
-    self.name = other.name
+```ruby
+class Pet
+  attr_reader :name
+  def initialize(name)
+    @name = name
+  end
+
+  def ==(other)
+    self.name == other.name
   end
 end
+
+doggy = Pet.new("Jinx")
+kitty = Pet.new("Jinx")
+kitty == doggy # => true
+
 ```
 
 
