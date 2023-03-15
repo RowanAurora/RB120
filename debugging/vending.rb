@@ -6,7 +6,7 @@ class VendingMachine
     @diet_coke = Stock.new("Diet Coke")
     @sprite = Stock.new("Sprite")
     @inventory = [@coke, @diet_coke, @sprite]
-    @cashonhand = 100
+    @cash_on_hand = 100
   end
 
   def purchase
@@ -40,7 +40,7 @@ class VendingMachine
       change = cash - item.price
       puts "Dispensing..."
       puts "#{item.name} and $#{change}"
-      @cashonhand += item.price
+      @cash_on_hand += item.price
     end
     rescue 
       puts "Order Cancelled"
@@ -91,3 +91,8 @@ vend = VendingMachine.new
 vend.inventory
 vend.purchase
 
+# Possible other things to code: 
+# A wallet class that contains cash as collaborator objects
+# A cash class that has a value and name state.
+# Change input of cash into vending machine to quarters, nickles etc and take from wallet
+# I opted to display options automatically because with vending machines you just...look.
